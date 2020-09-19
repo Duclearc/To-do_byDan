@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To-Do List REMAKE</title>
+</head>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.8.0/css/bulma.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma-extensions@4.0.0/dist/css/bulma-extensions.min.css">
+<style>
+      /* ALPHABETICALLY */
+    .crossoff {
+        text-decoration-line: line-through;
+    }
+    .delbtn {
+            opacity: 0;
+            border: none;
+            float: right;
+            /* position: relative;
+            bottom: 30%; */
+            height: 100%;
+            width: 10%;
+    }
+    .delbtn:hover {
+            opacity: 1;
+            background-color: hsl(348, 100%, 61%);
+            color: hsl(0, 0%, 96%);
+            border-radius: 10px;
+    }
+    .hero {
+        background-image: linear-gradient( #209CEE, #BDE4FF, #FFF);
+    }
+    #todo, 
+    #done {
+        border-radius: 20px;
+        background-color: #BDE4FF;
+    }
+    
+</style>
+<body>
+    <!-- TOP SECTION -->
+    <div id='top' class='hero section'>
+        <h2 class='subtitle hero-head has-text-right has-text-weight-light has-text-white'>byDan</h2>
+        <h1 class='hero-body title has-text-centered is-family-monospace is-size-1'>TO-DO</h1>
+        <input id="input" type="text" placeholder="Insert your task here..." class='is-size-5'>
+        <button id="add" class="button is-info is-outlined">+</button>
+        <div class="field">
+            <input id="switchThinRoundedOutlinedInfo" type="checkbox" name="switchThinRoundedOutlinedInfo" class="displayDone switch is-thin is-rounded is-outlined is-info" checked="checked">
+            <label for="switchThinRoundedOutlinedInfo">All Lists</label>
+        </div>
+    </div>
+    <!-- MIDDLE SECTION -->
+    <div id='middle' class='tile is-ancestor section'>
+        <!-- TO-DO LIST -->
+        <div id='todo' class='tile is-parent is-vertical'>
+            <h1 class='is-family-monospace is-size-3'>TO-DO</h1>
+            <!-- TO-DO'S GO HERE -->
+            
+        </div>
+        <div id='divide' class='has-background-white tile is-parent is-vertical is-1'></div>
+        <!-- DONE LIST -->
+        <div id='done' class='has-background-light tile is-parent is-vertical'>
+            <h1 class='is-family-monospace is-size-3'>DONE</h1>
+            <!-- DONE ITEMS GO HERE -->
+        </div>
+
+    </div>
+
+    <!-- SCRIPTS -->
+    <script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
+    <script src='https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js'></script> <!-- jQuery -->
+    <script>
+
+        // ******* VARIABLES ******* //
+        let todo = [];
+        let done = [];
+        const startertasks = [  
+            {task: '1/5. this is a task', list: 'todo', timestamp: ''},
+            {task: '2/5. to add: write above, then click the +', list: 'todo', timestamp: ''},
+            {task: '3/5. ⇐ check the box to complete a task', list: 'todo', timestamp: ''},
+            {task: '4/5. hover to my right to delete me ⇒', list: 'todo', timestamp: ''},
+            {task: '5/5. see/hide done tasks with the toggle above', list: 'todo', timestamp: ''},
+        ];
+
+
+        // ********* FUNCTIONS ********* //
+
+        // GET DATE   
+        function now() {
+            let date = new Date();
+            let options = { year: "numeric", month: "2-digit", day: "numeric", hour: "2-digit", minute: "2-digit" };  
+            return date.toLocaleTimeString("en-uk", options);
+        }
+
+        // SET UP itemObj (AKA: TASK-OBJ)   
+        function itemObj(input, list = 'todo') {
+            let obj = {};
+            obj['task'] = input;
+            obj['list'] = list;
+            obj['timestamp'] = (obj.list == 'todo') ? '':now();
+            return obj;
+        }
+
+        // PRESS INPUT FIELD'S 'ADD' BUTTON   
+        function clickadd() {
+            let input = $('#input').val();//get input field content and...
+            // ... do stuff with it
+            if (input == '') { alert ('Please insert a task'); return;} //MAKE SURE IT'S NOT AN EMPTY STRING
+            let obj = itemObj(input); // MAKE OBJ OUT OF INPUT FIELD
+            store(obj)// SAVE THAT OBJ TO LOCALSTORAGE
+            showInBrowser(obj);// DISPLAY NEW ITEM ON BROWSER
+            // ...once you're done using the input content...
+            $('#input').val('');//... always clean input fielld for next time
+        }
+
+        // REMOVE ITEM FROM ARRAY   
+        function arraypop(itemObj, list) {
+            let array = (list == 'todo') ? todo:done;
+            let i = array.map(function(item) { return item.task; }).indexOf(itemObj.task);//find that item's position in 'array' and..
+            console.log(array);
+            console.log(i);
+            array.splice(i, 1);//remove only that item
+        }
+
+        // STORE LOCALLY   
+        function store(itemObj, list = 'todo') {  
+            let array = (itemObj.list == 'todo') ? todo : done;
+            let removeList = (list == 'todo') ? 'done':'todo';
+            itemObj.list = list;
+            console.log(itemObj);
+            array.push(itemObj);//adds item to array
+            console.log(array);
+            arraypop(itemObj, removeList);// also remove it from oposite array
+            updateStorage(); //updates localStorage to current state of both arrays
+        }
+
+        // LOAD FROM STORAGE   
+        function load(list) {
+            let array = localStorage.getItem(list);
+            return JSON.parse(array);
+        }
+        
+        // STORAGE UPDATE   
+        function updateStorage() {
+            localStorage.setItem('todo', JSON.stringify(todo));
+            localStorage.setItem('done', JSON.stringify(done));
+        }
+        
+        // INSERT TEMPLATE TO BROWSER   
+        function showInBrowser(itemObj) {  
+            let cross = (itemObj.list=='done') ? 'crossoff':'';
+            let checked = (itemObj.list=='done') ? 'checked':'';
+            $(`#${itemObj.list}`).append(`
+                <div class='task tile is-child box'>
+                    <input type="checkbox" ${checked}>
+                    <label class='task ${cross}'>${itemObj.task}</label>
+                    <button class='delbtn'>
+                        <i class="fas fa-ban"></i>
+                    </button>
+                    <p class='timestamp has-text-right is-family-monospace is-size-7 is-marginless'>${itemObj.timestamp}</p>
+                </div>
+            `);
+        }
+
+        // ********* ACTIONS ********* //
+
+        //SETTING UP 'TODO' AND 'DONE'
+        todo = load('todo');  
+        done = load('done');  
+        todo = (todo == null) ? JSON.parse(JSON.stringify(startertasks)):todo; // if there's nothing in storage, load tutorial tasks
+        done = (done == null) ? []:done;
+
+        // ADD NEW TASK
+        $('#add').click((e) => { clickadd(); });  
+        $('#input').keypress((e) => {  if(e.which == 13) { clickadd(); }});  
+        todo.forEach(item => showInBrowser(item));
+        done.forEach(item => showInBrowser(item));
+
+        //MOVE CHECKED ITEMS TO OPPOSITE LIST
+        $('#middle').on('change','input[type=checkbox]', (e) => {  
+                let list = e.target.parentElement.parentElement.id;
+                list = (list == 'todo') ? 'done':'todo';
+                let task2move = itemObj(e.target.nextElementSibling.innerHTML, list);
+                store(task2move, list);
+                showInBrowser(task2move);
+                $(e.target.nextElementSibling).toggleClass('crossoff');
+                $(e.target.parentElement).remove();
+        });
+
+        //DELETE ITEMS (from both browser and localStorage)  
+        $('#middle').on('click', '.delbtn', (e => {
+            console.log(e.target.parentElement.previousElementSibling.innerHTML);
+            let taskText = e.target.parentElement.previousElementSibling.innerHTML;
+            let list = e.target.parentElement.parentElement.id;
+            console.log(list);
+            let taskObj = itemObj(taskText);
+            // arraypop(taskObj, list);
+            // updateStorage();
+            // $(e.target.parentElement).remove();
+        }));
+
+        //TOGGLING 'DONE' LIST  
+        $('.displayDone').click(() => {
+            $('#done').slideToggle('slow');
+            $('#divide').slideToggle('slow');
+            $('#todo').toggleClass('is-12');
+        });
+    </script>
+</body>
+
+</html>
